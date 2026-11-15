@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>Notice</AssemblyName>
+    <RootNamespace>Notice</RootNamespace>
+    <Version>0.1.0</Version>
+    <AssemblyTitle>Notice</AssemblyTitle>
+    <Product>Notice</Product>
+    <Authors>hufang360</Authors>
+    <Description>旅商 / 商店 / 渔夫任务 / BOSS 战报。无法令配置，参数见 Settings.cs。</Description>
+    <PackageId>Notice</PackageId>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1701;1702;1591;</NoWarn>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>1701;1702;1591;</NoWarn>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TShock" Version="6.2.1" />
+  </ItemGroup>
+
+</Project>
