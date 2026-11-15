@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - run: dotnet build Notice/Notice.csproj -c Release
+
+  release:
+    name: Release
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Read version
+        id: version
+        run: |
+          version=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Notice/Notice.csproj | head -1)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      # 版本号没变（tag 已存在）就只做编译检查，不重复发版
+      - name: Check existing release
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        if: steps.check.outputs.exists == 'false'
+        run: dotnet build Notice/Notice.csproj -c Release
+
+      - name: Package
+        if: steps.check.outputs.exists == 'false'
+        id: package
+        run: |
+          mkdir -p Publish
+          asset="Publish/Notice-${{ steps.version.outputs.tag }}-$(date +%m%d).dll"
+          cp Notice/bin/Release/net9.0/Notice.dll "$asset"
+          echo "asset=$asset" >> "$GITHUB_OUTPUT"
+          ls -l "$asset"
+
+      - name: Extract changelog
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          awk -v ver="(${{ steps.version.outputs.tag }})" '/^## /{f = index($0, ver) > 0; next} f' changelog.md > notes.md
+
+      - name: Create release
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+          ASSET: ${{ steps.package.outputs.asset }}
+        run: |
+          if [ -s notes.md ]; then
+            gh release create "$TAG" "$ASSET" --title "$TAG" --notes-file notes.md
+          else
+            gh release create "$TAG" "$ASSET" --title "$TAG" --generate-notes
+          fi
