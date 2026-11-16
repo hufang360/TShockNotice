@@ -13,7 +13,12 @@ internal sealed class ShopTarget
     public int ShopIndex { get; init; }
     public float DistanceTiles { get; init; }
 
-    public string Name => string.IsNullOrWhiteSpace(Npc.FullName) ? Npc.TypeName : Npc.FullName;
+    public string TypeName => Npc.TypeName;
+
+    /// <summary>城镇 NPC 的随机名字（如 Billy）；没有名字时为 null。</summary>
+    public string GivenName => string.IsNullOrWhiteSpace(Npc.GivenName) ? null : Npc.GivenName;
+
+    public string DisplayName => GivenName == null ? $"【{TypeName}】" : $"【{TypeName}】（{GivenName}）";
 }
 
 internal static class MerchantNotice
@@ -28,8 +33,8 @@ internal static class MerchantNotice
         }
 
         ChatText.Broadcast(
-            $"旅商带来了{items.Count}件商品：",
-            ChatText.ShopLines(items));
+            $"{ChatText.ItemIcon(Settings.TravelMerchantIconItemId)}【旅商】带来了{items.Count}件商品：",
+            ChatText.ItemLines(items));
     }
 
     public static ShopTarget FindNearestShopNpc(TSPlayer player, int rangeTiles)
@@ -142,10 +147,13 @@ internal static class MerchantNotice
         return result;
     }
 
-    public static void BroadcastShop(ShopTarget target, IReadOnlyList<Item> items)
+    public static void BroadcastShop(ShopTarget target, IReadOnlyList<Item> items, TSPlayer player)
     {
+        var mood = NpcMood.Describe(target.Npc, player?.TPlayer);
+        var tail = mood == null ? "" : $"（{mood}）";
+
         ChatText.Broadcast(
-            $"{target.Name}卖这{items.Count}件商品：",
-            ChatText.ShopLines(items));
+            $"{target.DisplayName}卖这{items.Count}件商品{tail}：",
+            ChatText.ItemLines(items));
     }
 }

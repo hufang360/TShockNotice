@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TShockAPI;
+using Notice.Boss;
 
 namespace Notice;
 
 internal static class Commands
 {
-    private const string UsePermission = "notice.use";
+    private const string UsePermission = "hf.notice.use";
 
     private static readonly Dictionary<string, DateTime> ShopCooldowns = new(StringComparer.OrdinalIgnoreCase);
     private static Command _command;
@@ -20,7 +21,7 @@ internal static class Commands
             "notice",
             "n")
         {
-            HelpText = "播报：/notice shop、/notice fish、/notice 1~10（快捷栏物品）",
+            HelpText = "播报：/notice shop、/notice fish、/notice boss、/notice 1~10（快捷栏物品）",
             AllowServer = true
         };
 
@@ -66,6 +67,9 @@ internal static class Commands
             case "fish":
                 FishNotice.Broadcast(args.Player);
                 break;
+            case "boss":
+                HandleBoss(args);
+                break;
             default:
                 SendHelp(args.Player);
                 break;
@@ -99,12 +103,24 @@ internal static class Commands
         var items = MerchantNotice.ReadShopItems(target.ShopIndex, player.Index);
         if (items.Count == 0)
         {
-            player.SendWarningMessage($"{target.Name} 没有可播报的商品。");
+            player.SendWarningMessage($"{target.DisplayName} 没有可播报的商品。");
             return;
         }
 
-        MerchantNotice.BroadcastShop(target, items);
+        MerchantNotice.BroadcastShop(target, items, player);
         SetCooldown(player);
+    }
+
+    private static void HandleBoss(CommandArgs args)
+    {
+        var latest = BossReport.Latest;
+        if (latest == null)
+        {
+            args.Player?.SendWarningMessage("还没有可播报的 BOSS 战报。");
+            return;
+        }
+
+        BossReport.Broadcast(latest);
     }
 
     private static void SendHelp(TSPlayer player)
@@ -112,6 +128,7 @@ internal static class Commands
         player.SendInfoMessage("用法：");
         player.SendInfoMessage("/notice shop, 播报附近最近 NPC商店 的库存");
         player.SendInfoMessage("/notice fish, 播报今天的渔夫 任务鱼");
+        player.SendInfoMessage("/notice boss, 再次播报最近一场 BOSS 战报");
         player.SendInfoMessage("/notice 1~10, 播报自己快捷栏第 1~10 格的物品");
     }
 

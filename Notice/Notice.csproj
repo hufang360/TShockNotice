@@ -4,11 +4,11 @@
     <TargetFramework>net9.0</TargetFramework>
     <AssemblyName>Notice</AssemblyName>
     <RootNamespace>Notice</RootNamespace>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <AssemblyTitle>Notice</AssemblyTitle>
     <Product>Notice</Product>
     <Authors>hufang360</Authors>
-    <Description>旅商 / 商店 / 渔夫任务 / BOSS 战报。无法令配置，参数见 Settings.cs。</Description>
+    <Description>全服播报，旅商 / 任务鱼 / BOSS 战报。</Description>
     <PackageId>Notice</PackageId>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>

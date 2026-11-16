@@ -29,6 +29,6 @@ internal static class HotbarNotice
             return;
         }
 
-        ChatText.SendTitle($"{player.Name}快捷栏第{slot}格：{ChatText.ItemTag(item)}");
+        ChatText.SendTitle($"{player.Name}:我有 {ChatText.ItemTag(item)}");
     }
 }

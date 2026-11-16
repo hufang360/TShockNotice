@@ -24,8 +24,14 @@ internal static class Settings
     public const int BossFinishDelayMilliseconds = 1000;
 
     // 输出
-    /// <summary>播报图标：铃铛（ItemID.Bell = 507）。</summary>
-    public const int NoticeIconItemId = 507;
+    /// <summary>播报图标：仙灵铃铛（ItemID.FairyBell = 425），每条播报开头。</summary>
+    public const int NoticeIconItemId = 425;
+
+    /// <summary>旅商播报的第二个图标：旅商草帽（ItemID.PeddlersHat = 2222）。</summary>
+    public const int TravelMerchantIconItemId = 2222;
+
+    /// <summary>BOSS 战报的第二个图标：史莱姆王纪念章（ItemID.KingSlimeTrophy = 2489）。</summary>
+    public const int BossIconItemId = 2489;
 
     /// <summary>商店一行最多放几个商品。</summary>
     public const int ItemsPerLine = 10;

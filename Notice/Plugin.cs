@@ -148,7 +148,7 @@ public class NoticePlugin : TerrariaPlugin
         try
         {
             session.CloseAllSegments();
-            BossReport.Broadcast(session);
+            BossReport.Broadcast(BossReport.Create(session));
         }
         catch (Exception ex)
         {
@@ -158,13 +158,15 @@ public class NoticePlugin : TerrariaPlugin
 
     private void OnNetGreetPlayer(GreetPlayerEventArgs args)
     {
-        if (_bossSession == null)
+        var player = TShock.Players[args.Who];
+        if (player is not { Active: true, RealPlayer: true })
         {
             return;
         }
 
-        var player = TShock.Players[args.Who];
-        if (player is { Active: true, RealPlayer: true })
+        FishNotice.OnPlayerJoin(player);
+
+        if (_bossSession != null)
         {
             _bossSession.AddParticipant(player, true);
         }
@@ -233,6 +235,7 @@ public class NoticePlugin : TerrariaPlugin
         _noBossSince = DateTime.MinValue;
         _lastTravelBroadcast = DateTime.MinValue;
         FishNotice.Reset();
+        BossReport.Reset();
     }
 
     private void Schedule(int delayMilliseconds, Action action)
