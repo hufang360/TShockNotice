@@ -39,8 +39,6 @@ public class NoticePlugin : TerrariaPlugin
         ServerApi.Hooks.ServerLeave.Register(this, OnServerLeave);
         ServerApi.Hooks.GamePostUpdate.Register(this, OnGamePostUpdate);
         ServerApi.Hooks.GameWorldDisconnect.Register(this, OnWorldDisconnect);
-
-        TShock.Log.ConsoleInfo("[Notice] 已加载。");
     }
 
     protected override void Dispose(bool disposing)
@@ -163,8 +161,6 @@ public class NoticePlugin : TerrariaPlugin
         {
             return;
         }
-
-        FishNotice.OnPlayerJoin(player);
 
         if (_bossSession != null)
         {

@@ -1,7 +1,6 @@
 using System;
 using System.Text.RegularExpressions;
 using Terraria;
-using Terraria.ID;
 using TShockAPI;
 using Notice.Utils;
 
@@ -11,32 +10,22 @@ internal static class FishNotice
 {
     private static DateTime _lastCheck = DateTime.MinValue;
     private static int _worldId = -1;
-    private static bool _wasDay;
-    private static bool _autoDoneToday;
 
-    /// <summary>今天已经自动播报过的内容，玩家随后上线时用它补发。</summary>
-    private static string _todayBroadcast;
+    /// <summary>上一帧是否白天；null 表示刚载入世界，只记基准不做判断。</summary>
+    private static bool? _wasDay;
+
+    /// <summary>夜晚→黎明后，等待任务鱼数据刷新再播报的时刻；MinValue 表示本次白天已处理完。</summary>
+    private static DateTime _pendingAt = DateTime.MinValue;
 
     public static void Reset()
     {
         _lastCheck = DateTime.MinValue;
         _worldId = -1;
-        _wasDay = false;
-        _autoDoneToday = false;
-        _todayBroadcast = null;
+        _wasDay = null;
+        _pendingAt = DateTime.MinValue;
     }
 
-    /// <summary>玩家上线补发：今天已经自动播报过，就给新上线的玩家再发一次。</summary>
-    public static void OnPlayerJoin(TSPlayer player)
-    {
-        if (!Settings.AutoBroadcastAnglerQuest || !_autoDoneToday || string.IsNullOrEmpty(_todayBroadcast))
-        {
-            return;
-        }
-
-        ChatText.SendTitleTo(player, _todayBroadcast);
-    }
-
+    /// <summary>只在夜晚转黎明（任务鱼更换）时播报一次；无人上线就跳过，之后上线的玩家不补发。</summary>
     public static void Tick()
     {
         if (Main.gameMenu)
@@ -65,31 +54,40 @@ internal static class FishNotice
         if (worldId != _worldId)
         {
             _worldId = worldId;
-            _wasDay = false;
-            _autoDoneToday = false;
-            _todayBroadcast = null;
+            _wasDay = null;
+            _pendingAt = DateTime.MinValue;
         }
 
         var day = Main.dayTime;
-        if (day && !_wasDay)
-        {
-            _autoDoneToday = false;
-            _todayBroadcast = null;
-        }
-
+        var wasDay = _wasDay;
         _wasDay = day;
 
-        if (!Settings.AutoBroadcastAnglerQuest || _autoDoneToday)
+        if (wasDay == null || !Settings.AutoBroadcastAnglerQuest)
         {
             return;
         }
+
+        if (!day)
+        {
+            _pendingAt = DateTime.MinValue;
+            return;
+        }
+
+        if (wasDay == false)
+        {
+            // 任务鱼在开始新一天时轮换，等它刷新完再读
+            _pendingAt = now.AddSeconds(1);
+            return;
+        }
+
+        if (_pendingAt == DateTime.MinValue || now < _pendingAt)
+        {
+            return;
+        }
+
+        _pendingAt = DateTime.MinValue;
 
         if (TShock.Utils.GetActivePlayerCount() <= 0)
-        {
-            return;
-        }
-
-        if (!AnglerReady())
         {
             return;
         }
@@ -101,8 +99,6 @@ internal static class FishNotice
         }
 
         ChatText.SendTitle(title);
-        _todayBroadcast = title;
-        _autoDoneToday = true;
     }
 
     public static void Broadcast(TSPlayer requester)
@@ -176,19 +172,5 @@ internal static class FishNotice
         }
 
         return Main.anglerQuestItemNetIDs[Main.anglerQuest];
-    }
-
-    private static bool AnglerReady()
-    {
-        for (var i = 0; i < Main.maxNPCs; i++)
-        {
-            var npc = Main.npc[i];
-            if (npc != null && npc.active && npc.type == NPCID.Angler && !npc.homeless)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

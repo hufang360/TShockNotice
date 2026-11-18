@@ -47,19 +47,6 @@ internal static class ChatText
         Log(text);
     }
 
-    /// <summary>只发给一个玩家（例如玩家上线时补发任务鱼）。</summary>
-    public static void SendTitleTo(TSPlayer player, string title)
-    {
-        if (player is not { Active: true })
-        {
-            return;
-        }
-
-        var text = NoticeIcon + title;
-        player.SendMessage(text, TitleColor);
-        Log($"{text} -> {player.Name}");
-    }
-
     /// <summary>标题发一条，正文按 <see cref="Settings.MaxLinesPerMessage"/> 行分条发。</summary>
     public static void Broadcast(string title, IEnumerable<string> lines)
     {
